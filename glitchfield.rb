@@ -11,6 +11,8 @@
 require 'rmagick'
 include Magick
 require_relative 'garkov'
+require_relative 'scrape'
+
 
 def random_color
   %w( pink red orange white yellow blue cyan teal purple ).shuffle.shift
@@ -36,7 +38,7 @@ def fuck_up_image(image)
 
   image = image.solarize if roll_dice
 
-  image = image.blur_image(2, rand(10)) if roll_dice
+  image = image.blur_image(2, rand(1..10)) if roll_dice
 
   image = image.radial_blur(rand(10)) if roll_dice
 
@@ -48,13 +50,20 @@ def roll_dice
 end
 
 def create_image(file_number)
+  puts "creating image #{file_number}"
   text = Magick::Draw.new
   text.font = "Garfield.ttf"
 
   garkov = Garkov.new
   sentence = garkov.sentence
 
-  gifs = ['1.gif', '2.gif', '3.gif'].shuffle!
+  gifs = []
+
+  10.times do |x|
+    gifs << "tmp/#{x}.gif"
+  end
+
+  gifs.shuffle!
 
   image1 = Magick::ImageList.new(gifs.shift)
   image2 = Magick::ImageList.new(gifs.shift)
@@ -75,8 +84,7 @@ def create_image(file_number)
 
 
   rand(5).times do
-    text.annotate(new_image, rand(500), rand(178), rand(600), rand(178), garkov.sentence) {
-        # self.fill = "rgb(#{rand(100)}%,#{rand(100)}%,#{rand(100)}%)"
+    text.annotate(new_image, rand(500), rand(178), rand(600), rand(178), garkov.sentence.upcase) {
         self.fill = random_color
         self.pointsize = rand(30)
         self.rotation = (rand(20) - 10)
@@ -84,57 +92,35 @@ def create_image(file_number)
     }
   end
 
-  new_image.write("gen_#{file_number}.gif")
+  new_image = new_image.resize_to_fit(1200, 356)
+
+  new_image.write("tmp/gen_#{file_number}.gif")
 end
 
-image1 = Magick::ImageList.new("1.gif")
-image2 = Magick::ImageList.new("2.gif")
-image3 = Magick::ImageList.new("3.gif")
-
-cropped1 = image3.crop(0, 0, 200, 178)
-cropped2 = image2.crop(200, 0, 200, 178)
-cropped3 = image1.crop(400, 0, 200, 178)
-
-# cropped1 = cropped1.shear(rand(180), 0)
-# cropped2 = cropped2.radial_blur(10)
-# # cropped3 = cropped3.wave()
-# cropped3 = cropped3.wave(25, 150)
-
-# cropped1 = cropped1.roll(10, 100)
-# cropped2 = cropped2.transverse
-# # cropped3 = cropped3.transverse
-
-new_image = Image.new(600, 178)
-
-cropped1 = fuck_up_image(cropped1)
-cropped2 = fuck_up_image(cropped2)
-cropped3 = fuck_up_image(cropped3)
 
 number_of_times = 10
+
+number_of_times.times do |x|
+  puts "writing strip #{x}"
+  write_strip(x)
+end
 
 number_of_times.times do |x|
   create_image(x)
   puts "did number #{x}"
 end
 
-# dest.composite!(src, x, y, composite_op) -> self
 
-new_image.composite!(cropped1, 0, 0, Magick::OverCompositeOp)
-new_image.composite!(cropped2, 200, 0, Magick::OverCompositeOp)
-new_image.composite!(cropped3, 400, 0, Magick::OverCompositeOp)
-
-
-
-anim = ImageList.new("gen_1.gif", "gen_2.gif", "gen_3.gif", "gen_5.gif", "gen_4.gif", "gen_6.gif", "gen_8.gif", "gen_7.gif", "gen_9.gif", "gen_0.gif")
+anim = ImageList.new("tmp/gen_1.gif", "tmp/gen_2.gif", "tmp/gen_3.gif", "tmp/gen_5.gif", "tmp/gen_4.gif", "tmp/gen_6.gif", "tmp/gen_8.gif", "tmp/gen_7.gif", "tmp/gen_9.gif", "tmp/gen_0.gif")
 anim.ticks_per_second = 100
-anim.delay = 10
+anim.delay = rand(8..15)
 anim.iterations = 0
 
 
 
 
 
-anim.write("animatinnnoo.gif")
+anim.write("output/animated_#{rand(1000)}.gif")
 
 
 
