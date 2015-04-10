@@ -12,6 +12,10 @@ require 'rmagick'
 include Magick
 require_relative 'garkov'
 
+def random_color
+  %w( pink red orange white yellow blue cyan teal purple ).shuffle.shift
+end
+
 def fuck_up_image(image)
   image = image.shear(rand(180), 0) if roll_dice
   image = image.roll(rand(180), rand(180)) if roll_dice
@@ -28,9 +32,14 @@ def fuck_up_image(image)
     end
   end
 
+  image = image.wave(rand(50), rand(50)) if roll_dice
+
   image = image.solarize if roll_dice
 
+  image = image.blur_image(2, rand(10)) if roll_dice
+
   image = image.radial_blur(rand(10)) if roll_dice
+
   image
 end
 
@@ -39,9 +48,17 @@ def roll_dice
 end
 
 def create_image(file_number)
-  image1 = Magick::ImageList.new("1.gif")
-  image2 = Magick::ImageList.new("2.gif")
-  image3 = Magick::ImageList.new("3.gif")
+  text = Magick::Draw.new
+  text.font = "Garfield.ttf"
+
+  garkov = Garkov.new
+  sentence = garkov.sentence
+
+  gifs = ['1.gif', '2.gif', '3.gif'].shuffle!
+
+  image1 = Magick::ImageList.new(gifs.shift)
+  image2 = Magick::ImageList.new(gifs.shift)
+  image3 = Magick::ImageList.new(gifs.shift)
   cropped1 = image3.crop(0, 0, 200, 178)
   cropped2 = image2.crop(200, 0, 200, 178)
   cropped3 = image1.crop(400, 0, 200, 178)
@@ -56,6 +73,18 @@ def create_image(file_number)
   new_image.composite!(cropped2, 200, 0, Magick::OverCompositeOp)
   new_image.composite!(cropped3, 400, 0, Magick::OverCompositeOp)
 
+
+  rand(5).times do
+    text.annotate(new_image, rand(500), rand(178), rand(600), rand(178), garkov.sentence) {
+        # self.fill = "rgb(#{rand(100)}%,#{rand(100)}%,#{rand(100)}%)"
+        self.fill = random_color
+        self.pointsize = rand(30)
+        self.rotation = (rand(20) - 10)
+        self.font_weight = BoldWeight
+    }
+  end
+
+  new_image.write("gen_#{file_number}.gif")
 end
 
 image1 = Magick::ImageList.new("1.gif")
@@ -81,8 +110,12 @@ cropped1 = fuck_up_image(cropped1)
 cropped2 = fuck_up_image(cropped2)
 cropped3 = fuck_up_image(cropped3)
 
+number_of_times = 10
 
-
+number_of_times.times do |x|
+  create_image(x)
+  puts "did number #{x}"
+end
 
 # dest.composite!(src, x, y, composite_op) -> self
 
@@ -90,24 +123,18 @@ new_image.composite!(cropped1, 0, 0, Magick::OverCompositeOp)
 new_image.composite!(cropped2, 200, 0, Magick::OverCompositeOp)
 new_image.composite!(cropped3, 400, 0, Magick::OverCompositeOp)
 
-garkov = Garkov.new
-sentence = garkov.sentence
-
-anim = ImageList.new("1.gif", "2.gif", "3.gif")
-
-text = Magick::Draw.new
-text.font = "Garfield.ttf"
-
-rand(5).times do
-  text.annotate(new_image, rand(500), rand(178), rand(600), rand(178), garkov.sentence) {
-      self.fill = 'black'
-      self.pointsize = 12
-      self.font_weight = BoldWeight
-  }
-end
-
-new_image.write("23.gif")
 
 
-puts sentence
+anim = ImageList.new("gen_1.gif", "gen_2.gif", "gen_3.gif", "gen_5.gif", "gen_4.gif", "gen_6.gif", "gen_8.gif", "gen_7.gif", "gen_9.gif", "gen_0.gif")
+anim.ticks_per_second = 100
+anim.delay = 10
+anim.iterations = 0
+
+
+
+
+
+anim.write("animatinnnoo.gif")
+
+
 
