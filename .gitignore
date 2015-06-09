@@ -1,1 +1,6 @@
 *.gif
+/output
+/tmp
+/ffm
+/output
+keys.rb

@@ -34,10 +34,17 @@ def make_year
 end
 
 def write_strip(name)
-  url = format_image_string
-  image = Magick::ImageList.new
-  urlimage = open(url)
-  image.from_blob(urlimage.read)
-  image.write("tmp/#{name}.gif")
+  begin
+    url = format_image_string
+    image = Magick::ImageList.new
+    urlimage = open(url)
+    image.from_blob(urlimage.read)
+  rescue OpenURI::HTTPError
+    puts "porblem. retrying..."
+    retry
+  else
+    puts "we made it, writing image"
+    image.write("tmp/strip_#{name}.gif")
+  end
 end
 
