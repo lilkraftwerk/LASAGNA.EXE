@@ -2,7 +2,7 @@
 
 # http://images.ucomics.com/comics/ga/1990/ga900216.gif
 
-require 'RMagick'
+require 'rmagick'
 require 'open-uri'
 
 def format_image_string
