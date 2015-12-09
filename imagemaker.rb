@@ -17,8 +17,6 @@ include Magick
 require_relative 'garkov'
 require_relative 'scrape'
 
-
-
 def format_number(number)
   if number < 10
     return "00#{number}"
